@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSecOps Orientation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            color: #333;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide {
+            width: 90%;
+            max-width: 1200px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: slideIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #764ba2;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.8em;
+            color: #764ba2;
+            margin: 25px 0 15px 0;
+        }
+
+        p, li {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        ul {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .principle-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .principle-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .principle-card h4 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+
+        .pipeline-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-stage {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .pipeline-stage::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: white;
+        }
+
+        .pipeline-stage:last-child::after {
+            content: '';
+        }
+
+        .assignment-section {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .assignment-section h3 {
+            color: #ff6b6b;
+            margin-top: 0;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 25px;
+            padding-left: 50px;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .icon {
+            font-size: 3em;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .troubleshooting-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .troubleshoot-card {
+            background: #f8f9fa;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .troubleshoot-card h4 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <h1 style="font-size: 4em; margin-bottom: 30px;">DevSecOps Orientation</h1>
+                <div class="icon">🚀 🔒 ⚙️</div>
+                <p style="font-size: 1.5em; color: #764ba2; margin-top: 30px;">Building Secure, Automated Software Delivery</p>
+                <p style="font-size: 1.2em; color: #888; margin-top: 20px;">CI/CD · GitHub Actions · Security · Automation</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: DevSecOps Culture -->
+        <div class="slide">
+            <h2>DevSecOps Culture & Principles</h2>
+            <p>DevSecOps integrates security practices within the DevOps process, making security a shared responsibility throughout the software development lifecycle.</p>
+            
+            <div class="principle-card">
+                <h4>🤝 Collaboration & Shared Responsibility</h4>
+                <p>Breaking down silos between Development, Security, and Operations teams. Everyone is responsible for security.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>⚡ Shift Left</h4>
+                <p>Integrate security early in the development process, not as an afterthought. Catch vulnerabilities before production.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>🤖 Automation First</h4>
+                <p>Automate security testing, compliance checks, and deployment processes to ensure consistency and speed.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>📊 Continuous Monitoring & Feedback</h4>
+                <p>Monitor applications and infrastructure continuously, providing rapid feedback to teams.</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Core Principles -->
+        <div class="slide">
+            <h2>Core DevSecOps Principles</h2>
+            
+            <h3>Key Pillars</h3>
+            <ul>
+                <li><strong>Security as Code:</strong> Treat security policies and configurations as code, version controlled and automated</li>
+                <li><strong>Continuous Security:</strong> Integrate security checks at every stage of the pipeline</li>
+                <li><strong>Fast Feedback Loops:</strong> Provide immediate feedback on security issues to developers</li>
+                <li><strong>Infrastructure as Code (IaC):</strong> Manage infrastructure through code for consistency and auditability</li>
+                <li><strong>Immutable Infrastructure:</strong> Replace rather than update servers to ensure consistency</li>
+                <li><strong>Least Privilege:</strong> Grant minimum necessary permissions to users and systems</li>
+            </ul>
+
+            <div class="highlight-box">
+                <strong>Remember:</strong> Security is not a gate at the end of development—it's woven into every step of the process.
+            </div>
+        </div>
+
+        <!-- Slide 4: CI/CD Concepts -->
+        <div class="slide">
+            <h2>CI/CD Concepts</h2>
+            
+            <h3>Continuous Integration (CI)</h3>
+            <p>Developers frequently merge code changes into a central repository, where automated builds and tests run.</p>
+            <ul>
+                <li>Frequent code commits (multiple times per day)</li>
+                <li>Automated build process</li>
+                <li>Automated testing (unit, integration, security)</li>
+                <li>Fast feedback to developers</li>
+            </ul>
+
+            <h3>Continuous Delivery/Deployment (CD)</h3>
+            <p>Automatically deploy all code changes to testing or production environments after the build stage.</p>
+            <ul>
+                <li><strong>Continuous Delivery:</strong> Code is ready to be deployed at any time (manual approval)</li>
+                <li><strong>Continuous Deployment:</strong> Every change automatically deployed to production</li>
+            </ul>
+
+            <div class="pipeline-diagram">
+                <div class="pipeline-stage">Commit</div>
+                <div class="pipeline-stage">Build</div>
+                <div class="pipeline-stage">Test</div>
+                <div class="pipeline-stage">Security Scan</div>
+                <div class="pipeline-stage">Deploy</div>
+            </div>
+        </div>
+
+        <!-- Slide 5: CI/CD Benefits -->
+        <div class="slide">
+            <h2>Benefits of CI/CD</h2>
+            
+            <div class="principle-card">
+                <h4>🚀 Faster Time to Market</h4>
+                <p>Automate repetitive tasks and reduce manual handoffs, allowing features to reach users faster.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>🐛 Early Bug Detection</h4>
+                <p>Catch bugs and security issues early when they're cheaper and easier to fix.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>📈 Improved Code Quality</h4>
+                <p>Consistent automated testing ensures higher quality and more reliable software.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>🔄 Reduced Risk</h4>
+                <p>Smaller, frequent deployments reduce the risk and impact of failures.</p>
+            </div>
+
+            <div class="principle-card">
+                <h4>💪 Increased Developer Productivity</h4>
+                <p>Automation frees developers to focus on writing code rather than manual processes.</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: GitHub Actions Basics -->
+        <div class="slide">
+            <h2>GitHub Actions Basics</h2>
+            
+            <p>GitHub Actions is a CI/CD platform that allows you to automate your build, test, and deployment pipeline directly in GitHub.</p>
+
+            <h3>Core Concepts</h3>
+            <ul>
+                <li><strong>Workflow:</strong> Automated process defined in YAML file (.github/workflows/)</li>
+                <li><strong>Event:</strong> Triggers that start a workflow (push, pull_request, schedule, etc.)</li>
+                <li><strong>Job:</strong> Set of steps that execute on the same runner</li>
+                <li><strong>Step:</strong> Individual task that runs commands or actions</li>
+                <li><strong>Action:</strong> Reusable unit of code (from marketplace or custom)</li>
+                <li><strong>Runner:</strong> Server that runs workflows (GitHub-hosted or self-hosted)</li>
+            </ul>
+
+            <div class="highlight-box">
+                <strong>Workflow File Location:</strong> <code>.github/workflows/your-workflow.yml</code>
+            </div>
+        </div>
+
+        <!-- Slide 7: GitHub Actions Structure -->
+        <div class="slide">
+            <h2>GitHub Actions Workflow Structure</h2>
+            
+            <pre>name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Build with Maven
+      run: mvn clean install
+      
+    - name: Run tests
+      run: mvn test</pre>
+
+            <div class="highlight-box">
+                <strong>Pro Tip:</strong> You can run multiple jobs in parallel or create dependencies between jobs using the <code>needs</code> keyword.
+            </div>
+        </div>
+
+        <!-- Slide 8: Build & Test Pipelines -->
+        <div class="slide">
+            <h2>Build & Test Pipelines</h2>
+            
+            <h3>Typical Java Build Pipeline Stages</h3>
+            <ol style="margin-left: 20px;">
+                <li><strong>Checkout:</strong> Pull the latest code from repository</li>
+                <li><strong>Setup Environment:</strong> Install JDK, Maven/Gradle, dependencies</li>
+                <li><strong>Compile:</strong> Compile source code</li>
+                <li><strong>Unit Tests:</strong> Run fast, isolated unit tests</li>
+                <li><strong>Integration Tests:</strong> Test component interactions</li>
+                <li><strong>Code Coverage:</strong> Measure test coverage</li>
+                <li><strong>Static Analysis:</strong> Check code quality (SonarQube, Checkstyle)</li>
+                <li><strong>Security Scanning:</strong> Scan for vulnerabilities (OWASP Dependency Check)</li>
+                <li><strong>Build Artifact:</strong> Create JAR/WAR file</li>
+                <li><strong>Upload Artifact:</strong> Store build artifact for deployment</li>
+            </ol>
+
+            <div class="highlight-box">
+                <strong>Best Practice:</strong> Fail fast! Run faster tests first to get quick feedback.
+            </div>
+        </div>
+
+        <!-- Slide 9: Pipeline Failures -->
+        <div class="slide">
+            <h2>Pipeline Failures & Troubleshooting</h2>
+            
+            <h3>Common Pipeline Failures</h3>
+            <div class="troubleshooting-grid">
+                <div class="troubleshoot-card">
+                    <h4>Build Failures</h4>
+                    <p>Compilation errors, missing dependencies, syntax errors</p>
+                </div>
+                <div class="troubleshoot-card">
+                    <h4>Test Failures</h4>
+                    <p>Unit test failures, integration test issues, flaky tests</p>
+                </div>
+                <div class="troubleshoot-card">
+                    <h4>Environment Issues</h4>
+                    <p>Wrong Java version, missing tools, configuration errors</p>
+                </div>
+                <div class="troubleshoot-card">
+                    <h4>Timeout Errors</h4>
+                    <p>Long-running tests, network issues, resource constraints</p>
+                </div>
+            </div>
+
+            <h3>Troubleshooting Steps</h3>
+            <ul>
+                <li>Check the pipeline logs for error messages</li>
+                <li>Reproduce the issue locally</li>
+                <li>Verify environment configuration (Java version, dependencies)</li>
+                <li>Check for recent code changes that might have caused the failure</li>
+                <li>Review test output and stack traces</li>
+                <li>Use debug logging for more details</li>
+            </ul>
+        </div>
+
+        <!-- Slide 10: Debugging Tips -->
+        <div class="slide">
+            <h2>Debugging GitHub Actions</h2>
+            
+            <h3>Useful Debugging Techniques</h3>
+            
+            <div class="principle-card">
+                <h4>1. Enable Debug Logging</h4>
+                <p>Set repository secrets: <code>ACTIONS_STEP_DEBUG</code> and <code>ACTIONS_RUNNER_DEBUG</code> to <code>true</code></p>
+            </div>
+
+            <div class="principle-card">
+                <h4>2. Use the Run Command with Output</h4>
+                <pre>- name: Debug info
+  run: |
+    echo "Java version: $(java -version)"
+    echo "Maven version: $(mvn -version)"
+    ls -la</pre>
+            </div>
+
+            <div class="principle-card">
+                <h4>3. Review Artifacts</h4>
+                <p>Upload logs and test reports as artifacts to review after the pipeline completes</p>
+                <pre>- uses: actions/upload-artifact@v3
+  with:
+    name: test-results
+    path: target/surefire-reports/</pre>
+            </div>
+        </div>
+
+        <!-- Slide 11: Assignment -->
+        <div class="slide">
+            <h2>🎯 Hands-On Assignment</h2>
+            
+            <div class="assignment-section">
+                <h3>Your Mission</h3>
+                <p>Create a GitHub Actions workflow for a Java project, add a build status badge, introduce a failing build, and fix it.</p>
+            </div>
+
+            <ol class="step-list">
+                <li>
+                    <strong>Create a Simple Java Maven Project</strong>
+                    <p>Create a basic Java project with a simple class and test</p>
+                </li>
+                <li>
+                    <strong>Create GitHub Actions Workflow</strong>
+                    <p>Add <code>.github/workflows/ci.yml</code> to build and test your project</p>
+                </li>
+                <li>
+                    <strong>Add Build Status Badge</strong>
+                    <p>Add a badge to your README.md showing build status</p>
+                </li>
+                <li>
+                    <strong>Introduce a Failing Test</strong>
+                    <p>Modify a test to make it fail, commit and watch the pipeline fail</p>
+                </li>
+                <li>
+                    <strong>Fix the Failure</strong>
+                    <p>Fix the test, commit, and verify the pipeline passes</p>
+                </li>
+            </ol>
+        </div>
+
+        <!-- Slide 12: Sample Workflow -->
+        <div class="slide">
+            <h2>Sample Java CI Workflow</h2>
+            
+            <pre>name: Java CI with Maven
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Run tests
+      run: mvn test
+
+    - name: Generate test report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: target/surefire-reports/</pre>
+        </div>
+
+        <!-- Slide 13: Adding Build Badge -->
+        <div class="slide">
+            <h2>Adding a Build Status Badge</h2>
+            
+            <h3>Build Badge URL Format</h3>
+            <pre>https://github.com/{username}/{repo}/actions/workflows/{workflow-file}/badge.svg</pre>
+
+            <h3>Markdown Syntax for README.md</h3>
+            <pre>![CI Pipeline](https://github.com/username/repo/actions/workflows/ci.yml/badge.svg)</pre>
+
+            <h3>Example</h3>
+            <p>If your repository is <code>johndoe/my-java-app</code> and workflow file is <code>ci.yml</code>:</p>
+            <pre>![CI Pipeline](https://github.com/johndoe/my-java-app/actions/workflows/ci.yml/badge.svg)</pre>
+
+            <div class="highlight-box">
+                <strong>Result:</strong> A badge will appear in your README showing whether the last build passed or failed
+                <br><br>
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='20'%3E%3Cg%3E%3Crect width='37' height='20' fill='%23555'/%3E%3Crect x='37' width='53' height='20' fill='%2397CA00'/%3E%3Ctext x='18.5' y='14' fill='%23fff' font-family='Verdana' font-size='11' text-anchor='middle'%3Ebuild%3C/text%3E%3Ctext x='63.5' y='14' fill='%23fff' font-family='Verdana' font-size='11' text-anchor='middle'%3Epassing%3C/text%3E%3C/g%3E%3C/svg%3E" alt="Build passing badge" style="display: inline-block;">
+            </div>
+        </div>
+
+        <!-- Slide 14: Sample Java Code -->
+        <div class="slide">
+            <h2>Sample Java Code for Assignment</h2>
+            
+            <h3>Calculator.java</h3>
+            <pre>public class Calculator {
+    public int add(int a, int b) {
+        return a + b;
+    }
+    
+    public int subtract(int a, int b) {
+        return a - b;
+    }
+    
+    public int multiply(int a, int b) {
+        return a * b;
+    }
+}</pre>
+
+            <h3>CalculatorTest.java</h3>
+            <pre>import org.junit.Test;
+import static org.junit.Assert.*;
+
+public class CalculatorTest {
+    @Test
+    public void testAdd() {
+        Calculator calc = new Calculator();
+        assertEquals(5, calc.add(2, 3));
+    }
+    
+    @Test
+    public void testSubtract() {
+        Calculator calc = new Calculator();
+        assertEquals(1, calc.subtract(3, 2));
+    }
+}</pre>
+        </div>
+
+        <!-- Slide 15: Introducing Failure -->
+        <div class="slide">
+            <h2>Introducing & Fixing Failures</h2>
+            
+            <h3>Step 1: Introduce a Failing Test</h3>
+            <p>Change the test assertion to make it fail:</p>
+            <pre>@Test
+public void testAdd() {
+    Calculator calc = new Calculator();
+    assertEquals(10, calc.add(2, 3)); // This will fail!
+}</pre>
+
+            <h3>Step 2: Commit and Observe</h3>
+            <p>Commit this change and watch your GitHub Actions pipeline fail. Check the logs to see the error message.</p>
+
+            <h3>Step 3: Fix the Test</h3>
+            <p>Revert the test to the correct assertion:</p>
+            <pre>@Test
+public void testAdd() {
+    Calculator calc = new Calculator();
+    assertEquals(5, calc.add(2, 3)); // Fixed!
+}</pre>
+
+            <h3>Step 4: Verify</h3>
+            <p>Commit the fix and watch the pipeline turn green again!</p>
+        </div>
+
+        <!-- Slide 16: Best Practices -->
+        <div class="slide">
+            <h2>CI/CD Best Practices</h2>
+            
+            <ul>
+                <li><strong>Keep builds fast:</strong> Optimize for speed (use caching, parallel jobs)</li>
+                <li><strong>Make builds deterministic:</strong> Same input should always produce same output</li>
+                <li><strong>Fail fast:</strong> Run quick checks first, expensive ones later</li>
+                <li><strong>Maintain clean build logs:</strong> Clear, actionable error messages</li>
+                <li><strong>Use branch protection:</strong> Require passing builds before merging</li>
+                <li><strong>Version control everything:</strong> Infrastructure, configuration, and code</li>
+                <li><strong>Monitor pipeline performance:</strong> Track build times and failure rates</li>
+                <li><strong>Secure your secrets:</strong> Use GitHub Secrets for sensitive data</li>
+                <li><strong>Regular maintenance:</strong> Update dependencies and actions regularly</li>
+            </ul>
+
+            <div class="highlight-box">
+                <strong>Golden Rule:</strong> If it hurts, do it more often. Frequent small changes are easier than big bang releases.
+            </div>
+        </div>
+
+        <!-- Slide 17: Resources -->
+        <div class="slide">
+            <h2>📚 Additional Resources</h2>
+            
+            <h3>Documentation</h3>
+            <ul>
+                <li>GitHub Actions Documentation: <code>docs.github.com/actions</code></li>
+                <li>GitHub Actions Marketplace: <code>github.com/marketplace</code></li>
+                <li>Maven Documentation: <code>maven.apache.org</code></li>
+            </ul>
+
+            <h3>Security Tools</h3>
+            <ul>
+                <li>OWASP Dependency Check</li>
+                <li>Snyk</li>
+                <li>GitHub Dependabot</li>
+                <li>SonarQube / SonarCloud</li>
+            </ul>
+
+            <h3>Key Takeaways</h3>
+            <div class="principle-card">
+                <p>✅ DevSecOps makes security everyone's responsibility</p>
+                <p>✅ CI/CD automates and accelerates software delivery</p>
+                <p>✅ GitHub Actions provides powerful, flexible automation</p>
+                <p>✅ Fast feedback loops improve code quality</p>
+                <p>✅ Practice makes perfect—experiment and iterate!</p>
+            </div>
+        </div>
+
+        <!-- Slide 18: Q&A -->
+        <div class="slide">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <h1 style="font-size: 4em; margin-bottom: 30px;">Questions?</h1>
+                <div class="icon">❓ 💬 🙋</div>
+                <p style="font-size: 1.5em; color: #764ba2; margin-top: 30px;">Let's discuss your questions about DevSecOps!</p>
+                <div class="highlight-box" style="margin-top: 50px; max-width: 700px;">
+                    <p style="font-size: 1.2em;">Remember: The best way to learn is by doing. Start your assignment and don't hesitate to experiment!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">18</span>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prev-btn" onclick="prevSlide()">← Previous</button>
+        <button class="nav-btn" id="next-btn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('total-slides').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+            
+            // Update button states
+            document.getElementById('prev-btn').disabled = currentSlide === 0;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
