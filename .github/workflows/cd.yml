@@ -164,7 +164,7 @@ jobs:
   # =============================================================================
   deploy-dev:
     name: Deploy to Development
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [prepare, build-and-push]
     if: needs.prepare.outputs.deploy-dev == 'true'
     
@@ -176,43 +176,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       
-      - name: Deploy to Dev Server
+      - name: Deploy to localhost (Dev on Mac)
         run: |
-          echo "🚀 Deploying to Development Environment"
+          echo "🚀 Deploying to LOCALHOST Dev environment"
           echo "Version: ${{ needs.prepare.outputs.version }}"
-          
-          # Simulate deployment (replace with actual deployment commands)
-          # Example: SSH to server and run docker commands
-          
-          # Pull latest image
-          # docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
-          
-          # Stop old container
-          # docker stop helloworld-dev || true
-          # docker rm helloworld-dev || true
-          
-          # Run new container
-          # docker run -d \
-          #   --name helloworld-dev \
-          #   -p 8080:8080 \
-          #   -e SPRING_PROFILES_ACTIVE=dev \
-          #   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
-          
-          echo "✅ Deployed to Development"
       
-      - name: Run smoke tests
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+      
+          docker stop helloworld-dev || true
+          docker rm helloworld-dev || true
+      
+          docker run -d \
+            --name helloworld-dev \
+            -p 6000:8080 \
+            -e SPRING_PROFILES_ACTIVE=dev \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+      
+          echo "✅ App running at http://localhost:6000"
+      
+      - name: Run localhost smoke tests
         run: |
-          echo "Running smoke tests on Dev..."
-          sleep 5
-          # curl -f http://dev.helloworld.example.com/actuator/health || exit 1
-          # curl -f http://dev.helloworld.example.com/ || exit 1
-          echo "✅ Smoke tests passed"
-      
+            echo "Running smoke tests on localhost..."
+            sleep 10
+            curl -f http://localhost:6000/actuator/health
+            curl -f http://localhost:6000/
+            echo "✅ Localhost smoke tests passed"
+
       - name: Notify deployment
         run: |
           echo "📢 Development deployment complete!" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- URL: http://dev.helloworld.example.com" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: http://localhost:6000" >> $GITHUB_STEP_SUMMARY
 
   # =============================================================================
   # JOB 4: DEPLOY TO STAGING
