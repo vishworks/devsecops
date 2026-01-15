@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: helloworld
+  
+server:
+  port: 8080
+  
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+---
+# Development profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    root: DEBUG
+
+---
+# Staging profile
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+logging:
+  level:
+    root: INFO
+
+---
+# Production profile
+spring:
+  config:
+    activate:
+      on-profile: production
+
+logging:
+  level:
+    root: WARN
+

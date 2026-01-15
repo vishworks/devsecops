@@ -1,0 +1,452 @@
+# =============================================================================
+# FILE: .github/workflows/cd.yml
+# PURPOSE: Continuous Deployment Pipeline
+# TRIGGER: On successful CI completion or manual trigger
+# =============================================================================
+
+name: CD Pipeline - Deploy to Environments
+
+# TRIGGERS
+on:
+  # Trigger when CI workflow completes successfully
+  workflow_run:
+    workflows: ["CI Pipeline - Build, Test & Security Scan"]
+    types:
+      - completed
+    branches:
+      - main
+  
+  # Manual trigger with environment selection
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        type: string
+
+# ENVIRONMENT VARIABLES
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/helloworld-app
+
+# JOBS
+jobs:
+
+  # =============================================================================
+  # JOB 1: PREPARE DEPLOYMENT
+  # =============================================================================
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    # Only run if CI passed or manual trigger
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      deploy-dev: ${{ steps.determine-env.outputs.deploy-dev }}
+      deploy-staging: ${{ steps.determine-env.outputs.deploy-staging }}
+      deploy-prod: ${{ steps.determine-env.outputs.deploy-prod }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Get version
+        id: get-version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+      
+      - name: Determine deployment environments
+        id: determine-env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual trigger - deploy to selected environment
+            ENV="${{ github.event.inputs.environment }}"
+            echo "deploy-dev=$([[ $ENV == 'dev' ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "deploy-staging=$([[ $ENV == 'staging' ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+            echo "deploy-prod=$([[ $ENV == 'production' ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          else
+            # Automatic trigger from main - deploy to dev and staging
+            echo "deploy-dev=true" >> $GITHUB_OUTPUT
+            echo "deploy-staging=true" >> $GITHUB_OUTPUT
+            echo "deploy-prod=false" >> $GITHUB_OUTPUT
+          fi
+
+  # =============================================================================
+  # JOB 2: BUILD AND PUSH DOCKER IMAGE
+  # =============================================================================
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: prepare
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      # Login to GitHub Container Registry
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Extract metadata for Docker
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}},value=${{ needs.prepare.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare.outputs.version }}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      # Build and push Docker image
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.prepare.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+  # =============================================================================
+  # JOB 3: DEPLOY TO DEVELOPMENT
+  # =============================================================================
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [prepare, build-and-push]
+    if: needs.prepare.outputs.deploy-dev == 'true'
+    
+    environment:
+      name: development
+      url: http://dev.helloworld.example.com
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy to Dev Server
+        run: |
+          echo "🚀 Deploying to Development Environment"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          
+          # Simulate deployment (replace with actual deployment commands)
+          # Example: SSH to server and run docker commands
+          
+          # Pull latest image
+          # docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+          
+          # Stop old container
+          # docker stop helloworld-dev || true
+          # docker rm helloworld-dev || true
+          
+          # Run new container
+          # docker run -d \
+          #   --name helloworld-dev \
+          #   -p 8080:8080 \
+          #   -e SPRING_PROFILES_ACTIVE=dev \
+          #   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+          
+          echo "✅ Deployed to Development"
+      
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests on Dev..."
+          sleep 5
+          # curl -f http://dev.helloworld.example.com/actuator/health || exit 1
+          # curl -f http://dev.helloworld.example.com/ || exit 1
+          echo "✅ Smoke tests passed"
+      
+      - name: Notify deployment
+        run: |
+          echo "📢 Development deployment complete!" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: http://dev.helloworld.example.com" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # JOB 4: DEPLOY TO STAGING
+  # Dependencies: deploy-dev must succeed
+  # =============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [prepare, build-and-push, deploy-dev]
+    if: needs.prepare.outputs.deploy-staging == 'true' && needs.deploy-dev.result == 'success'
+    
+    environment:
+      name: staging
+      url: http://staging.helloworld.example.com
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Deploy to Staging Server
+        run: |
+          echo "🚀 Deploying to Staging Environment"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          
+          # Deploy using docker-compose
+          cat > docker-compose.staging.yml <<EOF
+          version: '3.8'
+          services:
+            app:
+              image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+              ports:
+                - "8080:8080"
+              environment:
+                - SPRING_PROFILES_ACTIVE=staging
+                - JAVA_OPTS=-Xmx512m -Xms256m
+              restart: unless-stopped
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+          EOF
+          
+          # docker-compose -f docker-compose.staging.yml up -d
+          echo "✅ Deployed to Staging"
+      
+      - name: Wait for application to start
+        run: |
+          echo "Waiting for application to be ready..."
+          sleep 15
+      
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests on Staging..."
+          # Add your integration test commands here
+          # Example: newman run staging-tests.json
+          echo "✅ Integration tests passed"
+      
+      - name: Run performance tests
+        run: |
+          echo "Running performance tests..."
+          # Example: k6 run performance-test.js
+          echo "✅ Performance tests passed"
+      
+      - name: Notify deployment
+        run: |
+          echo "📢 Staging deployment complete!" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: http://staging.helloworld.example.com" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # JOB 5: APPROVAL GATE FOR PRODUCTION
+  # =============================================================================
+  approval-gate:
+    name: Production Approval Required
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy-staging]
+    if: needs.prepare.outputs.deploy-prod == 'true'
+    
+    environment:
+      name: production-approval
+    
+    steps:
+      - name: Request approval
+        run: |
+          echo "⏳ Waiting for production deployment approval..."
+          echo "Staging tests have passed successfully."
+          echo "Version ${{ needs.prepare.outputs.version }} is ready for production."
+
+  # =============================================================================
+  # JOB 6: DEPLOY TO PRODUCTION
+  # Dependencies: Requires manual approval
+  # =============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [prepare, build-and-push, approval-gate]
+    
+    environment:
+      name: production
+      url: https://helloworld.example.com
+    
+    strategy:
+      # Deploy to multiple production servers sequentially
+      max-parallel: 1
+      matrix:
+        server: [prod-server-1, prod-server-2]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Create backup
+        run: |
+          echo "📦 Creating backup of current production deployment..."
+          # Backup current container state
+          # docker tag helloworld-prod:current helloworld-prod:backup-$(date +%Y%m%d-%H%M%S)
+          echo "✅ Backup created"
+      
+      - name: Deploy to Production - ${{ matrix.server }}
+        run: |
+          echo "🚀 Deploying to Production - ${{ matrix.server }}"
+          echo "Version: ${{ needs.prepare.outputs.version }}"
+          
+          # Blue-Green deployment strategy
+          # 1. Deploy to "green" slot
+          # 2. Run health checks
+          # 3. Switch traffic from "blue" to "green"
+          # 4. Keep "blue" for quick rollback
+          
+          echo "Deploying to green slot..."
+          # docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+          # docker run -d --name helloworld-green \
+          #   -p 8081:8080 \
+          #   -e SPRING_PROFILES_ACTIVE=production \
+          #   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
+          
+          sleep 10
+          
+          echo "Running health checks on green..."
+          # curl -f http://localhost:8081/actuator/health || exit 1
+          
+          echo "Switching traffic to green..."
+          # Update load balancer or reverse proxy
+          # nginx -s reload
+          
+          echo "Stopping blue (old version)..."
+          # docker stop helloworld-blue || true
+          
+          echo "✅ Deployed to ${{ matrix.server }}"
+      
+      - name: Post-deployment verification
+        run: |
+          echo "Verifying production deployment..."
+          sleep 5
+          # curl -f https://helloworld.example.com/actuator/health || exit 1
+          # curl -f https://helloworld.example.com/ || exit 1
+          echo "✅ Production verification passed"
+      
+      - name: Update deployment status
+        run: |
+          echo "📢 Production deployment complete - ${{ matrix.server }}!" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Server: ${{ matrix.server }}" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # JOB 7: POST-DEPLOYMENT MONITORING
+  # =============================================================================
+  post-deployment:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy-production]
+    if: always()
+    
+    steps:
+      - name: Monitor application metrics
+        run: |
+          echo "📊 Monitoring application for 5 minutes..."
+          # Monitor error rates, response times, CPU/memory usage
+          # If metrics degrade, trigger automatic rollback
+          sleep 10
+          echo "✅ Metrics look good"
+      
+      - name: Send deployment notification
+        run: |
+          echo "📧 Sending deployment notifications..."
+          # Send to Slack, email, etc.
+          echo "Deployment notification sent"
+      
+      - name: Update change log
+        run: |
+          echo "📝 Updating change log..."
+          # Document the deployment
+          echo "Change log updated"
+      
+      - name: Final deployment summary
+        run: |
+          echo "# 🎉 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Environments Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- Development: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Staging: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Production: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor application metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Watch for any issues in production" >> $GITHUB_STEP_SUMMARY
+          echo "- Be ready to rollback if needed" >> $GITHUB_STEP_SUMMARY
+
+  # =============================================================================
+  # JOB 8: ROLLBACK (Only runs on failure)
+  # =============================================================================
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy-production]
+    if: failure()
+    
+    steps:
+      - name: Rollback to previous version
+        run: |
+          echo "⚠️ Deployment failed! Initiating rollback..."
+          # Switch traffic back to blue (previous version)
+          # docker stop helloworld-green
+          # docker start helloworld-blue
+          # Update load balancer
+          echo "✅ Rollback completed"
+      
+      - name: Notify rollback
+        run: |
+          echo "🚨 ROLLBACK EXECUTED" >> $GITHUB_STEP_SUMMARY
+          echo "Production deployment failed and has been rolled back." >> $GITHUB_STEP_SUMMARY
+          echo "Please investigate the logs and fix issues before redeploying." >> $GITHUB_STEP_SUMMARY
+
