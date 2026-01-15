@@ -4,9 +4,13 @@
 # =============================================================================
 
 # Stage 1: Build stage (not needed as we build in CI, but shown for completeness)
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:17-jre-jammy AS builder
 WORKDIR /app
-COPY target/*.jar app.jar
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]
+
 RUN java -Djarmode=layertools -jar app.jar extract
 
 # Stage 2: Runtime stage
