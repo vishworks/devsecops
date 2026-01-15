@@ -61,6 +61,7 @@ jobs:
       
       - name: Get version
         id: get-version
+        working-directory: helloworld-app
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ -n "${{ github.event.inputs.version }}" ]]; then
             VERSION="${{ github.event.inputs.version }}"
@@ -114,6 +115,7 @@ jobs:
           cache: 'maven'
       
       - name: Build JAR
+        working-directory: helloworld-app
         run: mvn clean package -DskipTests
       
       - name: Set up Docker Buildx
@@ -145,8 +147,8 @@ jobs:
         id: build
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./helloworld-app
+          file: ./helloworld-app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
