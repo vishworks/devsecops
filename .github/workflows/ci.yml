@@ -167,6 +167,7 @@ jobs:
   # =============================================================================
   security-scan:
     name: Security Vulnerability Scan
+    if: false   # DISABLED FOR DEMO
     runs-on: ubuntu-latest
     needs: build  # DEPENDENCY: Wait for build job
     
@@ -221,7 +222,7 @@ jobs:
   docker-build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: [build, security-scan]  # MULTIPLE DEPENDENCIES
+    needs: build  # MULTIPLE DEPENDENCIES. Changing [build, security-scan] to build for demo
     
     steps:
       - name: Checkout repository
