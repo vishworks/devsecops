@@ -1,7 +1,7 @@
 # Hello World Spring Boot Application
 
-[![CI Pipeline - Build, Test & Security Scan](https://github.com/vishworks/devsecops/actions/workflows/ci.yml/badge.svg)](https://github.com/vishworks/devsecops/actions/workflows/ci.yml)
-![CD Pipeline](https://github.com/vishworks/devsecops/helloworld-app/actions/workflows/cd.yml/badge.svg)
+[![CI Pipeline - Build, Test & Security Scan](https://github.com/vishworks/devsecops/actions/workflows/ci.yml/badge.svg)](https://github.com/vishworks/devsecops/actions/workflows/ci.yml)  
+[![CD Pipeline - Deploy to Environments](https://github.com/vishworks/devsecops/actions/workflows/cd.yml/badge.svg)](https://github.com/vishworks/devsecops/actions/workflows/cd.yml)
 ![Security](https://img.shields.io/badge/security-scanned-brightgreen)
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen)
