@@ -26,7 +26,7 @@ LABEL description="Hello World Spring Boot Application"
 LABEL version="1.0.0"
 
 # Create non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 # Set working directory
 WORKDIR /app
