@@ -192,25 +192,25 @@ jobs:
       
           docker run -d \
             --name helloworld-dev \
-            -p 6000:8080 \
+            -p 60001:8080 \
             -e SPRING_PROFILES_ACTIVE=dev \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare.outputs.version }}
       
-          echo "✅ App running at http://localhost:6000"
+          echo "✅ App running at http://localhost:60001"
       
       - name: Run localhost smoke tests
         run: |
             echo "Running smoke tests on localhost..."
             sleep 10
-            curl -f http://localhost:6000/actuator/health
-            curl -f http://localhost:6000/
+            curl -f http://localhost:60001/actuator/health
+            curl -f http://localhost:60001/
             echo "✅ Localhost smoke tests passed"
 
       - name: Notify deployment
         run: |
           echo "📢 Development deployment complete!" >> $GITHUB_STEP_SUMMARY
           echo "- Version: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- URL: http://localhost:6000" >> $GITHUB_STEP_SUMMARY
+          echo "- URL: http://localhost:60001" >> $GITHUB_STEP_SUMMARY
 
   # =============================================================================
   # JOB 4: DEPLOY TO STAGING
