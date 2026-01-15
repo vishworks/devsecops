@@ -56,6 +56,7 @@ jobs:
       # STEP 3: Extract version from pom.xml
       - name: Extract project version
         id: version
+        working-directory: helloworld-app
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -63,14 +64,17 @@ jobs:
       
       # STEP 4: Compile the code
       - name: Compile source code
+        working-directory: helloworld-app
         run: mvn clean compile -DskipTests
       
       # STEP 5: Run unit tests
       - name: Run unit tests
+        working-directory: helloworld-app 
         run: mvn test
       
       # STEP 6: Generate code coverage report
       - name: Generate code coverage
+        working-directory: helloworld-app
         run: mvn jacoco:report
       
       # STEP 7: Upload test results
@@ -79,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: target/surefire-reports/
+          path: helloworld-app/target/surefire-reports/
           retention-days: 30
       
       # STEP 8: Upload coverage report
@@ -87,11 +91,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: target/site/jacoco/
+          path: helloworld-app/target/site/jacoco/
           retention-days: 30
       
       # STEP 9: Build JAR artifact
       - name: Package application
+        working-directory: helloworld-app
         run: mvn package -DskipTests
       
       # STEP 10: Set artifact name
@@ -106,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: application-jar
-          path: target/*.jar
+          path: helloworld-app/target/*.jar
           retention-days: 7
 
   # =============================================================================
@@ -132,14 +137,17 @@ jobs:
       
       # Static code analysis
       - name: Run Checkstyle
+        working-directory: helloworld-app
         run: mvn checkstyle:check
         continue-on-error: true
       
       - name: Run PMD
+        working-directory: helloworld-app 
         run: mvn pmd:check
         continue-on-error: true
       
       - name: Run SpotBugs
+        working-directory: helloworld-app
         run: mvn spotbugs:check
         continue-on-error: true
       
@@ -149,9 +157,9 @@ jobs:
         with:
           name: code-quality-reports
           path: |
-            target/checkstyle-result.xml
-            target/pmd.xml
-            target/spotbugsXml.xml
+            helloworld-app/target/checkstyle-result.xml
+            helloworld-app/target/pmd.xml
+            helloworld-app/target/spotbugsXml.xml
 
   # =============================================================================
   # JOB 3: SECURITY SCANNING
@@ -175,6 +183,7 @@ jobs:
       
       # Check for vulnerable dependencies
       - name: OWASP Dependency Check
+        working-directory: helloworld-app
         run: |
           mvn org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=7 \
@@ -202,7 +211,7 @@ jobs:
         with:
           name: security-reports
           path: |
-            target/dependency-check-report.html
+            helloworld-app/target/dependency-check-report.html
             trivy-results.sarif
 
   # =============================================================================
@@ -223,7 +232,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: application-jar
-          path: target/
+          path: helloworld-app/target/
       
       # Set up Docker Buildx for advanced builds
       - name: Set up Docker Buildx
@@ -233,8 +242,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./helloworld-app
+          file: ./helloworld-app/Dockerfile
           push: false
           tags: |
             helloworld-app:${{ needs.build.outputs.version }}
