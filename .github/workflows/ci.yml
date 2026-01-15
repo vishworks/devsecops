@@ -245,6 +245,7 @@ jobs:
           context: ./helloworld-app
           file: ./helloworld-app/Dockerfile
           push: false
+          load: true
           tags: |
             helloworld-app:${{ needs.build.outputs.version }}
             helloworld-app:latest
