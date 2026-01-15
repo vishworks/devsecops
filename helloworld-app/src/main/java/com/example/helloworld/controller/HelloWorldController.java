@@ -30,7 +30,7 @@ public class HelloWorldController {
     }
 }
 
-# Response classes
+// Response classes
 class HelloResponse {
     private String message;
     private String status;
