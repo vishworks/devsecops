@@ -76,7 +76,7 @@ jobs:
       # STEP 7: Upload test results
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: target/surefire-reports/
@@ -84,7 +84,7 @@ jobs:
       
       # STEP 8: Upload coverage report
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: target/site/jacoco/
@@ -103,7 +103,7 @@ jobs:
       
       # STEP 11: Upload JAR for next jobs
       - name: Upload JAR artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: application-jar
           path: target/*.jar
@@ -145,7 +145,7 @@ jobs:
       
       - name: Upload code quality reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code-quality-reports
           path: |
@@ -198,7 +198,7 @@ jobs:
       
       - name: Upload security scan results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: |
@@ -257,7 +257,7 @@ jobs:
           docker save helloworld-app:latest | gzip > helloworld-app.tar.gz
       
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-image
           path: helloworld-app.tar.gz
