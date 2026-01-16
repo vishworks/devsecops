@@ -11,7 +11,7 @@ public class HelloWorldController {
     @GetMapping("/")
     public String helloWorld() {
         return "<html><body style='font-family: Arial; text-align: center; padding: 50px;'>" +
-               "<h1 style='color: #4CAF50;'>🎉 Hello World! 🌍</h1>" +
+               "<h1 style='color: #F36921;'>🎉 Hello Quester! 🌍</h1>" +
                "<p style='font-size: 20px;'>Welcome to the DevSecOps Demo Application</p>" +
                "<p style='color: #666;'>Deployed successfully via CI/CD Pipeline</p>" +
                "<p style='color: #999; font-size: 14px;'>Current time: " + 
