@@ -310,8 +310,8 @@ jobs:
         run: |
           RESPONSE=$(curl -s http://localhost:8080/)
           echo "Response: $RESPONSE"
-          if [[ "$RESPONSE" != *"Hello World"* ]]; then
-            echo "Test failed: Expected 'Hello World' in response"
+          if [[ "$RESPONSE" != *"Hello Quester"* ]]; then
+            echo "Test failed: Expected 'Hello Quester' in response"
             exit 1
           fi
           echo "✅ Integration test passed!"
