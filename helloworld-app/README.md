@@ -6,7 +6,7 @@
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen)
 
-A simple Hello World application demonstrating DevSecOps practices with CI/CD pipelines.
+A simple Hello World application demonstrating DevSecOps practices with CI/CD pipelines. This application has some deliberate mistakes and decisions in the ci.yml and cd.yml (copied into the repository root/.github/workflows folder) to aide with overall understanding of GitHub actions based CI/CD.  
 
 ## 🚀 Features
 
